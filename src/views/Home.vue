@@ -1,6 +1,8 @@
 <script setup>
+import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { state } from '@/helpers/state';
+import { getSpreadsheet, shorten } from '@/helpers/utils';
 
 const route = useRoute();
 const id = route.params.id || 'home';
@@ -8,6 +10,19 @@ const current = state.gangs[id];
 const gangs = Object.fromEntries(
   Object.entries(state.gangs).filter(gang => gang[1].parent === id)
 );
+const loading = ref(false);
+const missions = ref([]);
+
+onMounted(async () => {
+  if (current.missions) {
+    loading.value = true;
+    const gid = current.missions.slice(1);
+    const sheetId = '1f4ldYQlU-2a8YD4Ap8bpLoEpz-e0DtaBJCYdsrtmwp0';
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=SELECT%20*&gid=${gid}`;
+    missions.value = await getSpreadsheet(url);
+    loading.value = false;
+  }
+});
 </script>
 
 <template>
@@ -31,15 +46,33 @@ const gangs = Object.fromEntries(
       <div v-else class="block border-b p-4 space-x-3 h-[140px]">
         <h1 class="mono">{{ current.about }}</h1>
       </div>
-      <router-link
-        :to="{ name: 'home', params: { id: gang.name } }"
-        v-for="(gang, i) in gangs"
-        :key="i"
-        class="block border-b px-4 py-3 leading-6"
-      >
-        <h3>#{{ gang.name }}</h3>
-        <span class="text-skin-text">{{ gang.about || '-' }}</span>
-      </router-link>
+
+      <div v-if="Object.keys(gangs).length > 0">
+        <div class="border-b eyebrow px-4 py-1">Gang(s)</div>
+        <router-link
+          :to="{ name: 'home', params: { id: gang.name } }"
+          v-for="(gang, i) in gangs"
+          :key="i"
+          class="block border-b px-4 py-3 leading-6"
+        >
+          <h3>#{{ gang.name }}</h3>
+          <span class="text-skin-text">{{ gang.about || '-' }}</span>
+        </router-link>
+      </div>
+
+      <div v-if="current.missions">
+        <div class="border-b eyebrow px-4 py-1">Mission(s)</div>
+        <UiLoading v-if="loading" class="block p-4" />
+        <div
+          v-else
+          v-for="(mission, i) in missions"
+          :key="i"
+          class="block border-b px-4 py-3 leading-6"
+        >
+          <h3>{{ mission.about }}</h3>
+          <span class="text-skin-text">{{ mission.type }}</span>
+        </div>
+      </div>
     </div>
 
     <div
@@ -79,7 +112,7 @@ const gangs = Object.fromEntries(
           Discord
         </h4>
         <a :href="current.discord" target="_blank">
-          {{ current.discord }}
+          {{ shorten(current.discord, 44) }}
         </a>
       </div>
 
