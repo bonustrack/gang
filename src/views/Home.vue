@@ -47,6 +47,11 @@ onMounted(async () => {
         <h1 class="mono">{{ current.about }}</h1>
       </div>
 
+	    <div v-if="current.purpose" class="border-b">
+		    <div class="border-b eyebrow px-4 py-1">Purpose</div>
+		    <p class="text-skin-link p-4 pt-3">{{ current.purpose }}</p>
+	    </div>
+
       <div v-if="Object.keys(gangs).length > 0">
         <div class="border-b eyebrow px-4 py-1">Gang(s)</div>
         <router-link
