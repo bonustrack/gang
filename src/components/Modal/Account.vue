@@ -1,0 +1,92 @@
+<script setup>
+import { toRefs, ref, watch, computed } from 'vue';
+import { getInjected } from '@snapshot-labs/lock/src/utils';
+import { shorten, explorerUrl, getUrl } from '@/helpers/utils';
+import connectors from '@/helpers/connectors.json';
+import { useWeb3 } from '@/composables/useWeb3';
+
+const props = defineProps(['open']);
+const emit = defineEmits(['login', 'close']);
+
+const { open } = toRefs(props);
+const { web3, logout } = useWeb3();
+const step = ref(null);
+
+const injected = computed(() => getInjected());
+
+async function handleLogout() {
+  await logout();
+  emit('close');
+}
+
+watch(open, () => (step.value = null));
+</script>
+
+<template>
+  <UiModal :open="open" @close="$emit('close')">
+    <template v-slot:header>
+      <h3
+        v-if="!web3.account || step === 'connect'"
+        v-text="'Connect wallet'"
+      />
+      <h3 v-text="'Account'" v-else />
+    </template>
+    <div v-if="!web3.account || step === 'connect'">
+      <div class="m-4 space-y-2">
+        <a
+          v-for="(connector, id, i) in connectors"
+          :key="i"
+          @click="$emit('login', connector.id)"
+          target="_blank"
+          class="block"
+        >
+          <UiButton
+            v-if="id === 'injected' && injected"
+            class="button-outline w-full flex justify-center items-center"
+          >
+            <img
+              :src="getUrl(injected.icon)"
+              height="28"
+              width="28"
+              class="mr-2 -mt-1"
+              :alt="injected.name"
+            />
+            {{ injected.name }}
+          </UiButton>
+          <UiButton
+            v-else-if="id !== 'gnosis'"
+            class="button-outline w-full flex justify-center items-center gap-2"
+          >
+            <img :src="getUrl(connector.icon)" height="25" width="25" />
+            {{ connector.name }}
+          </UiButton>
+        </a>
+      </div>
+    </div>
+    <div v-else>
+      <div v-if="$auth.isAuthenticated.value" class="m-4 space-y-2">
+        <a
+          :href="explorerUrl(web3.network.key, web3.account)"
+          target="_blank"
+          class="block"
+        >
+          <UiButton
+            class="button-outline w-full flex justify-center items-center"
+          >
+            <Stamp :id="web3.account" :size="18" class="mr-2 -ml-1" />
+            <span v-if="web3.profile.name" v-text="web3.profile.name" />
+            <span v-else-if="web3.profile.ens" v-text="web3.profile.ens" />
+            <span v-else v-text="shorten(web3.account)" />
+            <Icon name="external-link" class="ml-1" />
+          </UiButton>
+        </a>
+        <UiButton @click="step = 'connect'" class="button-outline w-full">
+          Connect wallet
+        </UiButton>
+        <UiButton @click="handleLogout" class="button-outline w-full !text-red">
+          Log out
+        </UiButton>
+      </div>
+    </div>
+  </UiModal>
+</template>
