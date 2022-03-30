@@ -47,10 +47,10 @@ onMounted(async () => {
         <h1 class="mono">{{ current.about }}</h1>
       </div>
 
-	    <div v-if="current.purpose" class="border-b">
-		    <div class="border-b eyebrow px-4 py-1">Purpose</div>
-		    <p class="text-skin-link p-4 pt-3">{{ current.purpose }}</p>
-	    </div>
+      <div v-if="current.purpose" class="border-b">
+        <div class="border-b eyebrow px-4 py-1">Purpose</div>
+        <p class="text-skin-link p-4 pt-3">{{ current.purpose }}</p>
+      </div>
 
       <div v-if="Object.keys(gangs).length > 0">
         <div class="border-b eyebrow px-4 py-1">Gang(s)</div>
@@ -86,7 +86,7 @@ onMounted(async () => {
       <div>
         <h4 class="mb-2">
           <Icon name="user" class="mr-1" />
-          Soldiers
+          Member(s)
           <UiCounter :counter="current.soldiers.length" class="ml-1" />
         </h4>
         <div>
@@ -109,6 +109,16 @@ onMounted(async () => {
             <div class="text-sm">{{ state.soldiers[soldier].name }}</div>
           </div>
         </div>
+      </div>
+
+      <div v-if="current.website">
+        <h4 class="mb-2">
+          <Icon name="world" class="mr-1" />
+          Website
+        </h4>
+        <a :href="current.website" target="_blank">
+          {{ current.website }}
+        </a>
       </div>
 
       <div v-if="current.discord">
